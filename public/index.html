@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SriAFK - Minecraft AFK System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4a6fa5;
+      --secondary: #166088;
+      --background: #0e1a2a;
+      --text: #ffffff;
+    }
+    
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--background);
+      color: var(--text);
+    }
+    
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+    
+    .sidebar {
+      width: 300px;
+      background-color: rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .panel {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    
+    h1, h2, h3 {
+      color: var(--primary);
+    }
+    
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px 0;
+    }
+    
+    button:hover {
+      background-color: var(--secondary);
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0 15px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text);
+      border-radius: 4px;
+    }
+    
+    .chat-message {
+      margin: 5px 0;
+      padding: 5px;
+      border-radius: 4px;
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    .player-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .player {
+      padding: 5px 10px;
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+    
+    .tab-container {
+      display: flex;
+      margin-bottom: 15px;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: rgba(0, 0, 0, 0.2);
+      margin-right: 5px;
+    }
+    
+    .tab.active {
+      background-color: var(--primary);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h2>SriAFK</h2>
+      <div class="panel">
+        <h3>Account Setup</h3>
+        <label for="accountType">Account Type:</label>
+        <select id="accountType">
+          <option value="premium">Premium</option>
+          <option value="cracked">Cracked</option>
+        </select>
+        
+        <label for="username">Minecraft Username:</label>
+        <input type="text" id="username" placeholder="Your Minecraft username">
+        
+        <label for="version">Minecraft Version:</label>
+        <select id="version">
+          <option value="1.20.1">1.20.1</option>
+          <option value="1.19.4">1.19.4</option>
+          <!-- More versions can be added -->
+        </select>
+      </div>
+      
+      <div class="panel">
+        <h3>Server Connection</h3>
+        <label for="serverName">Server Name:</label>
+        <input type="text" id="serverName" placeholder="My Server">
+        
+        <label for="serverIp">Server IP:</label>
+        <input type="text" id="serverIp" placeholder="mc.example.com">
+        
+        <label for="serverPort">Server Port:</label>
+        <input type="number" id="serverPort" placeholder="25565" value="25565">
+        
+        <button id="connectBtn">Connect</button>
+      </div>
+      
+      <div class="panel">
+        <h3>Settings</h3>
+        <div class="tab-container">
+          <div class="tab active" data-tab="ui">UI</div>
+          <div class="tab" data-tab="connection">Connection</div>
+          <div class="tab" data-tab="messages">Messages</div>
+          <div class="tab" data-tab="game">Game</div>
+        </div>
+        
+        <div class="tab-content active" id="ui-tab">
+          <label for="theme">Theme:</label>
+          <select id="theme">
+            <option value="default">Default</option>
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+          
+          <label>
+            <input type="checkbox" id="askResourcePack"> Ask to download resource pack
+          </label>
+        </div>
+        
+        <div class="tab-content" id="connection-tab">
+          <label for="onConnectCommands">On Connect Commands:</label>
+          <textarea id="onConnectCommands" rows="3"></textarea>
+          
+          <label for="loginDelay">Delay After Login (seconds):</label>
+          <input type="number" id="loginDelay" value="1">
+          
+          <label for="autoTeleport">Auto Teleport After Login:</label>
+          <input type="text" id="autoTeleport" placeholder="x y z">
+          
+          <label>
+            <input type="checkbox" id="autoLogin" checked> Auto Login
+          </label>
+          
+          <label>
+            <input type="checkbox" id="sendJoinMessage" checked> Send "joined with SriAfk"
+          </label>
+        </div>
+        
+        <div class="tab-content" id="messages-tab">
+          <div id="recurrentMessagesContainer">
+            <!-- Will be populated with JS -->
+          </div>
+          <button id="addMessageBtn">Add Message</button>
+          
+          <label for="messageDelay">Delay Between Messages (seconds):</label>
+          <input type="number" id="messageDelay" value="60">
+        </div>
+        
+        <div class="tab-content" id="game-tab">
+          <label>
+            <input type="checkbox" id="downloadSkins"> Download Skins
+          </label>
+          
+          <label>
+            <input type="checkbox" id="saveLogs"> Save Logs
+          </label>
+          
+          <label>
+            <input type="checkbox" id="autoMove" checked> Move Automatically Every 2 Minutes
+          </label>
+          
+          <label>
+            <input type="checkbox" id="autoReconnect" checked> Automatically Reconnect
+          </label>
+          
+          <label for="reconnectDelay">Reconnection Delay (seconds):</label>
+          <input type="number" id="reconnectDelay" value="10">
+          
+          <label for="chatTextSize">Chat Text Size:</label>
+          <select id="chatTextSize">
+            <option value="small">Small</option>
+            <option value="medium" selected>Medium</option>
+            <option value="large">Large</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <div class="main-content">
+      <h1>Minecraft AFK System</h1>
+      
+      <div class="panel">
+        <h2>Server Status</h2>
+        <div id="connectionStatus">Not connected</div>
+      </div>
+      
+      <div class="panel">
+        <h2>Server Chat</h2>
+        <div id="chatDisplay" style="height: 300px; overflow-y: auto;"></div>
+      </div>
+      
+      <div class="panel">
+        <h2>Online Players</h2>
+        <div class="player-list" id="playerList"></div>
+      </div>
+      
+      <div class="panel">
+        <h2>Bot Controls</h2>
+        <button id="moveForwardBtn">Move Forward</button>
+        <button id="moveBackBtn">Move Back</button>
+        <button id="moveLeftBtn">Move Left</button>
+        <button id="moveRightBtn">Move Right</button>
+        <button id="jumpBtn">Jump</button>
+        <button id="disconnectBtn">Disconnect</button>
+      </div>
+      
+      <div class="panel">
+        <h2>Inventory</h2>
+        <div id="inventoryDisplay"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let currentBotId = null;
+    
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+      });
+    });
+    
+    // Connect button
+    document.getElementById('connectBtn').addEventListener('click', () => {
+      const config = {
+        accountType: document.getElementById('accountType').value,
+        username: document.getElementById('username').value,
+        version: document.getElementById('version').value,
+        serverName: document.getElementById('serverName').value,
+        serverIp: document.getElementById('serverIp').value,
+        serverPort: document.getElementById('serverPort').value,
+        theme: document.getElementById('theme').value,
+        askResourcePack: document.getElementById('askResourcePack').checked,
+        onConnectCommands: document.getElementById('onConnectCommands').value,
+        loginDelay: parseInt(document.getElementById('loginDelay').value),
+        autoTeleport: document.getElementById('autoTeleport').value,
+        autoLogin: document.getElementById('autoLogin').checked,
+        joinMessage: document.getElementById('sendJoinMessage').checked ? "joined with SriAfk" : null,
+        recurrentMessages: Array.from(document.querySelectorAll('.recurrent-message')).map(el => ({
+          message: el.querySelector('input[type="text"]').value,
+          delay: parseInt(el.querySelector('input[type="number"]').value)
+        })),
+        recurrentDelay: parseInt(document.getElementById('messageDelay').value),
+        downloadSkins: document.getElementById('downloadSkins').checked,
+        saveLogs: document.getElementById('saveLogs').checked,
+        autoMove: document.getElementById('autoMove').checked,
+        autoReconnect: document.getElementById('autoReconnect').checked,
+        reconnectDelay: parseInt(document.getElementById('reconnectDelay').value),
+        chatTextSize: document.getElementById('chatTextSize').value
+      };
+      
+      socket.emit('createBot', config);
+    });
+    
+    // Add message button
+    document.getElementById('addMessageBtn').addEventListener('click', () => {
+      const container = document.getElementById('recurrentMessagesContainer');
+      const div = document.createElement('div');
+      div.className = 'recurrent-message';
+      div.innerHTML = `
+        <input type="text" placeholder="Message or command">
+        <input type="number" placeholder="Delay (seconds)" value="10">
+        <button class="remove-message">Remove</button>
+      `;
+      container.appendChild(div);
+      
+      div.querySelector('.remove-message').addEventListener('click', () => {
+        div.remove();
+      });
+    });
+    
+    // Movement controls
+    document.getElementById('moveForwardBtn').addEventListener('click', () => {
+      if (currentBotId) socket.emit('botControl', { botId: currentBotId, action: 'forward' });
+    });
+    
+    document.getElementById('moveBackBtn').addEventListener('click', () => {
+      if (currentBotId) socket.emit('botControl', { botId: currentBotId, action: 'back' });
+    });
+    
+    document.getElementById('moveLeftBtn').addEventListener('click', () => {
+      if (currentBotId) socket.emit('botControl', { botId: currentBotId, action: 'left' });
+    });
+    
+    document.getElementById('moveRightBtn').addEventListener('click', () => {
+      if (currentBotId) socket.emit('botControl', { botId: currentBotId, action: 'right' });
+    });
+    
+    document.getElementById('jumpBtn').addEventListener('click', () => {
+      if (currentBotId) socket.emit('botControl', { botId: currentBotId, action: 'jump' });
+    });
+    
+    document.getElementById('disconnectBtn').addEventListener('click', () => {
+      if (currentBotId) socket.emit('disconnectBot', { botId: currentBotId });
+    });
+    
+    // Socket events
+    socket.on('botCreated', (data) => {
+      currentBotId = data.botId;
+      document.getElementById('connectionStatus').textContent = 'Connected';
+    });
+    
+    socket.on('chatMessage', (data) => {
+      if (data.botId === currentBotId) {
+        const chatDisplay = document.getElementById('chatDisplay');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message';
+        
+        // Process the JSON message to handle colors and formatting
+        const processJsonMessage = (json) => {
+          if (json.text) {
+            let result = json.text;
+            if (json.color) {
+              result = `<span style="color: ${json.color}">${result}</span>`;
+            }
+            if (json.bold) result = `<strong>${result}</strong>`;
+            if (json.italic) result = `<em>${result}</em>`;
+            if (json.underlined) result = `<u>${result}</u>`;
+            if (json.strikethrough) result = `<s>${result}</s>`;
+            if (json.obfuscated) result = `<span class="obfuscated">${result}</span>`;
+            
+            if (json.extra) {
+              json.extra.forEach(extra => {
+                result += processJsonMessage(extra);
+              });
+            }
+            
+            return result;
+          }
+          return '';
+        };
+        
+        messageDiv.innerHTML = processJsonMessage(data.message);
+        chatDisplay.appendChild(messageDiv);
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+      }
+    });
+    
+    socket.on('playerUpdate', (data) => {
+      if (data.botId === currentBotId) {
+        const playerList = document.getElementById('playerList');
+        
+        if (data.type === 'join') {
+          const playerDiv = document.createElement('div');
+          playerDiv.className = 'player';
+          playerDiv.textContent = data.player;
+          playerDiv.id = `player-${data.player}`;
+          playerList.appendChild(playerDiv);
+        } else if (data.type === 'leave') {
+          const playerDiv = document.getElementById(`player-${data.player}`);
+          if (playerDiv) playerDiv.remove();
+        }
+      }
+    });
+    
+    // Apply theme
+    function applyTheme(theme) {
+      const root = document.documentElement;
+      root.style.setProperty('--primary', theme.primary);
+      root.style.setProperty('--secondary', theme.secondary);
+      root.style.setProperty('--background', theme.background);
+      root.style.setProperty('--text', theme.text);
+    }
+    
+    document.getElementById('theme').addEventListener('change', (e) => {
+      const themeName = e.target.value;
+      applyTheme(themes[themeName]);
+    });
+    
+    // Initialize with default theme
+    applyTheme(themes.default);
+  </script>
+</body>
+</html>
